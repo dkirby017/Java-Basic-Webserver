@@ -33,11 +33,40 @@ public class ResourceFactory
 	 */
 	public Resource newInstance(String url) throws FileNotFoundException, IOException
 	{
+		File filePath = getFile(url);
+												
+		return buildNewResource(filePath);
+	}
+	
+	/**
+	 * Returns a new File object for the specified URL
+	 * 
+	 * @param url the file path URL
+	 * 
+	 * @return a File object for the specified URL
+	 * @throws FileNotFoundException if the file does not exist
+	 */
+	File getFile(String url) throws FileNotFoundException
+	{
 		// Check if the requested file exists
 		File filePath = new File(System.getProperty("user.dir") + url);	
 		if (!filePath.exists())
 			throw new FileNotFoundException("File not found: " + url);
-												
+		
+		return filePath;
+	}
+	
+	/**
+	 * Builds a new Resource object from a given File object
+	 * 
+	 * @param filePath the File to build the resource from
+	 * 
+	 * @return a new Resource object containing the bytes from the file
+	 * 
+	 * @throws IOException if an I/O error occurs while reading the file
+	 */
+	Resource buildNewResource(File filePath) throws IOException
+	{
 		BufferedInputStream input = new BufferedInputStream(new FileInputStream(filePath));
 		
 		try

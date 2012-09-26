@@ -15,8 +15,8 @@ import java.net.Socket;
 public class ClientConnection {
 	
 	private Socket _socket;
-	private SimpleRequest _request = null;
-	private SimpleResponse _response = null;
+	private IRequest _request = null;
+	private IResponse _response = null;
 	
 	/**
 	 * Constructor
@@ -28,36 +28,36 @@ public class ClientConnection {
 	}
 	
 	/**
-	 * Helper method to isolate the construction of the SimpleRequest object. Useful in testing
+	 * Helper method to isolate the construction of the IRequest object. Useful in testing
 	 * 
-	 * @return a SimpleRequest object  
-	 * @throws IOException if an I/O error occurs while constructing the SimpleRequest
+	 * @return an IRequest object  
+	 * @throws IOException if an I/O error occurs while constructing the IRequest
 	 * @throws MalformedRequestException if the request is malformed
 	 * @throws UnsupportedMethodException if the request method is unsupported
 	 */
-	SimpleRequest buildRequest() throws IOException, MalformedRequestException, UnsupportedMethodException {				
+	IRequest buildRequest() throws IOException, MalformedRequestException, UnsupportedMethodException {				
 		return new SimpleRequest(_socket);
 	}
 	
 	/**
-	 * Helper method to isolate the construction of the SimpleResponse object. Useful in testing
+	 * Helper method to isolate the construction of the IResponse object. Useful in testing
 	 * 
-	 * @return a SimpleResponse object
-	 * @throws IOException if an I/O error occurs while constructing the SimpleResponse
+	 * @return a IResponse object
+	 * @throws IOException if an I/O error occurs while constructing the IResponse
 	 */
-	SimpleResponse buildResponse() throws IOException {
+	IResponse buildResponse() throws IOException {
 		return new SimpleResponse(_socket);
 	}
 	
 	/**
-	 * Gets the instance's SimpleRequest object
+	 * Gets the instance's IRequest object
 	 * 
-	 * @return the instance's SimpleRequest object
-	 * @throws IOException if an I/O error occurs while getting the SimpleRequest
+	 * @return the instance's IRequest object
+	 * @throws IOException if an I/O error occurs while getting the IRequest
 	 * @throws MalformedRequestException if the request is malformed
 	 * @throws UnsupportedMethodException if the request method is unsupported
 	 */
-	public SimpleRequest getRequest() throws IOException, MalformedRequestException, UnsupportedMethodException {
+	public IRequest getRequest() throws IOException, MalformedRequestException, UnsupportedMethodException {
 		if (_request == null)
 			_request = buildRequest();
 		
@@ -65,12 +65,12 @@ public class ClientConnection {
 	}
 	
 	/**
-	 * Gets the instances SimpleResponse object
+	 * Gets the instances IResponse object
 	 * 
-	 * @return the instance's SimpleResponse object
-	 * @throws IOException if an I/O error occurs while getting the SimpleResponse
+	 * @return the instance's IResponse object
+	 * @throws IOException if an I/O error occurs while getting the IResponse
 	 */
-	public SimpleResponse getResponse() throws IOException {
+	public IResponse getResponse() throws IOException {
 		if (_response == null)
 			_response = buildResponse();
 		

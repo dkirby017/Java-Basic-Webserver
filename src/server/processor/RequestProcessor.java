@@ -63,23 +63,11 @@ public class RequestProcessor extends Thread implements IProcessor{
 	 */
 	public void process(ClientConnection connection) 
 	{
-		ServletManager servletManager = ServletManager.getInstance();
+		ServletManager servletManager = getServletManager();
 		
 		try
 		{
-			IProcessor processor = null;
-			
-			// determine whether the request is for a servlet
-			if (servletManager.isServletRequest(connection.getRequest().getUrlPath()))
-			{
-				// pass to servlet processor
-				processor = new ServletProcessor();						
-			}
-			else 
-			{
-				// pass to static resource processor
-				processor = new ResourceProcessor();
-			}
+			IProcessor processor = getProcessor(connection, servletManager);
 			
 			processor.process(connection);
 		}
@@ -98,7 +86,7 @@ public class RequestProcessor extends Thread implements IProcessor{
 			sendErrorResponse(connection, StatusCode.Not_Found);
 			_logger.log(e.getMessage());
 		}
-		catch (ParserConfigurationException | SAXException | IOException | InstantiationException | IllegalAccessException e) 
+		catch (Exception e) 
 		{
 			sendErrorResponse(connection, StatusCode.Internal_Server_Error);
 			_logger.log(e.getMessage());	
@@ -118,6 +106,31 @@ public class RequestProcessor extends Thread implements IProcessor{
 			
 			// signal that the processing is finished
 			_ThreadManager.notifyThreadFinished();
+		}
+	}
+	
+	/**
+	 * Gets the servlet manager. Separated so that it can be mocked out when testing
+	 * 
+	 * @return the servlet manager
+	 */
+	ServletManager getServletManager()
+	{
+		return ServletManager.getInstance();
+	}
+	
+	IProcessor getProcessor(ClientConnection connection, ServletManager servletManager) throws ParserConfigurationException, SAXException, IOException, MalformedRequestException, UnsupportedMethodException
+	{
+		// determine whether the request is for a servlet
+		if (servletManager.isServletRequest(connection.getRequest().getUrlPath()))
+		{
+			// return a servlet processor
+			return new ServletProcessor();						
+		}
+		else 
+		{
+			// return a static resource processor
+			return new ResourceProcessor();
 		}
 	}
 	
