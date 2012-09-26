@@ -7,6 +7,12 @@ import server.io.HTTPStatusCodes;
 import server.io.IRequest;
 import server.io.IResponse;
 
+/**
+ * A basic servlet class for testing
+ * 
+ * @author dkirby
+ *
+ */
 public class TestServlet implements ISimpleServlet {
 
 	@Override
@@ -17,7 +23,7 @@ public class TestServlet implements ISimpleServlet {
 	
 		String header = response.generateHeader();
 		
-		String body = "<h1>This is a GET request";
+		String body = "<h1>This is a GET request</h1>";
 		
 		OutputStream out = response.getOutputStream();
 		
@@ -51,7 +57,7 @@ public class TestServlet implements ISimpleServlet {
 	
 		String header = response.generateHeader();
 		
-		String body = "<h1>This is a POST request";
+		String body = "<h1>This is a POST request</h1>";
 		
 		OutputStream out = response.getOutputStream();
 		

@@ -20,7 +20,7 @@ public class RequestMethods
 	 * Maps a given request method string to the appropriate method enumeration value
 	 * 
 	 * @param method the method string to map
-	 * @return the appropriate method enumeration value for the given string, or invalid if the string does not
+	 * @return the appropriate method enumeration value for the given string, or INVALID if the string does not
 	 * match a supported method
 	 */
 	static public Method mapMethod(String method)

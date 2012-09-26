@@ -22,9 +22,6 @@ public class ClientConnection {
 	 * Constructor
 	 * 
 	 * @param socket the socket used for the connection
-	 * @throws UnsupportedMethodException 
-	 * @throws MalformedRequestException 
-	 * @throws IOException 
 	 */
 	public ClientConnection(Socket socket) {
 		_socket = socket;

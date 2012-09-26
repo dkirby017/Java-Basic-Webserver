@@ -28,6 +28,12 @@ public class HTTPStatusCodes {
 		
 		private final int _code;
 		private StatusCode(int code) { _code = code; }
+		
+		/**
+		 * Gets the integer value for the current StatusCode object
+		 * 
+		 * @return the integer value of the current StatusCode object
+		 */
 		public int getValue() { return _code; }
 	}
 	

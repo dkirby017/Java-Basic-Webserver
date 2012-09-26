@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import server.io.HTTPStatusCodes.StatusCode;
 
@@ -15,10 +16,65 @@ import server.io.HTTPStatusCodes.StatusCode;
  */
 public class SimpleResponse implements IResponse {
 	
+	/** 
+	 * private class to store the header value along with its index in the _headerArray ArrayList.
+	 * Used in a HashMap and ArrayList to allow for constant time insertion and lookup, and printing the entire
+	 * list in linear time
+	 * 
+	 * @author dkirby
+	 *
+	 */
+	private class headerNode {
+		private int _arrayIndex;
+		private String _key;
+		private String _value;
+		
+		public headerNode(String key, String value, int arrayIndex) {
+			_key = key;
+			_value = value;
+			_arrayIndex = arrayIndex;
+		}
+		
+		@SuppressWarnings("unused")
+		public void setKey(String key)
+		{
+			_key = key;
+		}
+		
+		public void setValue(String value)
+		{
+			_value = value;
+		}
+		
+		@SuppressWarnings("unused")
+		public void setIndex(int arrayIndex)
+		{
+			_arrayIndex = arrayIndex;
+		}
+		
+		public String getKey()
+		{
+			return _key;
+		}
+		
+		public String getValue()
+		{
+			return _value;
+		}
+		
+		@SuppressWarnings("unused")
+		public int getIndex()
+		{
+			return _arrayIndex;
+		}
+	}
+	
 	private final OutputStream _OutputStream;
 	
 	private StatusCode _StatusCode;
-	protected ArrayList<String[]> _headers;
+	private HashMap<String, headerNode> _headers;	
+	private ArrayList<headerNode> _headerArray;
+	
 	
 	/**
 	 * Constructor
@@ -28,7 +84,8 @@ public class SimpleResponse implements IResponse {
 	 */
 	public SimpleResponse(Socket socket) throws IOException {
 		_OutputStream = socket.getOutputStream();
-		_headers = new ArrayList<String[]>();
+		_headers = new HashMap<>();
+		_headerArray = new ArrayList<headerNode>();
 	}
 
 	@Override
@@ -38,17 +95,19 @@ public class SimpleResponse implements IResponse {
 
 	@Override
 	public void setHeader(String name, String value) {
-		for (int i = 0; i < _headers.size(); i++)
+		if (_headers.containsKey(name))
 		{
-			if (_headers.get(i)[0].equals(name))
-			{
-				_headers.get(i)[1] = value;
-				return;
-			}
+			headerNode hNode = _headers.get(name);			
+			hNode.setValue(value);
 		}
-		
-		String[] s = { name, value };
-		_headers.add(s);
+		else
+		{
+			int index = _headerArray.size();
+			headerNode hNode = new headerNode(name, value, index);
+			
+			_headerArray.add(hNode);
+			_headers.put(name, hNode);
+		}
 	}
 
 	@Override
@@ -65,7 +124,7 @@ public class SimpleResponse implements IResponse {
 		// build the rest of the header
 		for (int i = 0; i < _headers.size(); i++)
 		{
-			s += _headers.get(i)[0] + ": " + _headers.get(i)[1] + "\r\n";
+			s += _headerArray.get(i).getKey() + ": " + _headerArray.get(i).getValue() + "\r\n";
 		}
 		
 		// build the trailing \r\n

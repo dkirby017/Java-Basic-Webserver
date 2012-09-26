@@ -2,6 +2,10 @@ package server.servlet;
 
 import java.io.IOException;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import server.io.ClientConnection;
 import server.io.IRequest;
 import server.io.MalformedRequestException;
@@ -10,10 +14,17 @@ import server.io.UnsupportedMethodException;
 import server.processor.IProcessor;
 import servlet.ISimpleServlet;
 
+/**
+ * Processes the servlet request and passes control off to the servlet object. Any exceptions prior to passing the control
+ * off to the servlet are passed up the call stack.
+ * 
+ * @author dkirby
+ *
+ */
 public class ServletProcessor implements IProcessor {
 
 	@Override
-	public void process(ClientConnection connection) throws ClassNotFoundException, IOException, MalformedRequestException, UnsupportedMethodException, InstantiationException, IllegalAccessException 
+	public void process(ClientConnection connection) throws ClassNotFoundException, IOException, MalformedRequestException, UnsupportedMethodException, InstantiationException, IllegalAccessException, ParserConfigurationException, SAXException 
 	{
 		IRequest request = connection.getRequest();
 		
@@ -24,10 +35,13 @@ public class ServletProcessor implements IProcessor {
 		if (index != -1)
 			url = url.substring(0, index);
 		
+		// get the servlet manager
 		ServletManager manager = ServletManager.getInstance();
 		
+		// get the servlet
 		ISimpleServlet servlet = manager.getServlet(url);
 		
+		// get the request method
 		Method method = request.getMethod();
 		
 		// invalid method would have been caught during the request parsing,

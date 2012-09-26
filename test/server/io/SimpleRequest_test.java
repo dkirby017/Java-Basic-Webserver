@@ -2,9 +2,11 @@ package server.io;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
@@ -60,15 +62,11 @@ public class SimpleRequest_test {
 	 * Test that parseMethod() returns the expected result 
 	 */
 	public void test_parseMethod() {
-		String header = "GET /foo/bar HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
-						"";
-		
-		Scanner scn = new Scanner(header);
+		String method = "GET";
 		
 		try 
 		{
-			Method result = _Request.parseMethod(scn);
+			Method result = _Request.parseMethod(method);
 			
 			assertEquals(Method.GET, result);
 		} 
@@ -83,15 +81,11 @@ public class SimpleRequest_test {
 	 * Test that parseMethod() throws a UnsupportedMethodException when expected
 	 */
 	public void test_parseMethod_error() {
-		String header = "INVALID /foo/bar HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
-						"";
-		
-		Scanner scn = new Scanner(header);
+		String header = "NOT_A_METHOD";
 		
 		try 
 		{
-			_Request.parseMethod(scn);
+			_Request.parseMethod(header);
 			
 			fail();
 		} 
@@ -104,25 +98,7 @@ public class SimpleRequest_test {
 			fail();
 		}
 	}
-	
-	@Test
-	/**
-	 * Test that parseUrl() returns the expected result
-	 */
-	public void test_parseUrl() {
-		String url = "/foo/bar?one=two&three=four&five=six+seven";
-		String header = "GET " + url + " HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
-						"";
-
-		Scanner scn = new Scanner(header);
-		scn.next(); // skip the GET since it would already have been scanned
 		
-		String result = _Request.parseUrl(scn);
-			
-		assertEquals(url, result);		
-	}
-	
 	@Test
 	/**
 	 * Test that parseUrlParams() returns the expected result
@@ -172,16 +148,11 @@ public class SimpleRequest_test {
 	 * Test that parsePostData() returns the expected results
 	 */
 	public void test_parsePostData() {
-		String header = "POST /foo/bar HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
-						"\n" +
-						"one=two&three=four&five=six+\n" +
-						"seven";
+		String header = "one=two&three=four&five=six+\n" +
+						"seven\n" +
+						"\n";
 		
 		Scanner scn = new Scanner(header);
-		scn.nextLine(); // skip the header section that would have already been scanned
-		scn.nextLine();
-		scn.nextLine();
 		
 		try 
 		{
@@ -202,16 +173,11 @@ public class SimpleRequest_test {
 	 * Test that parsePostData() throws a MalformedRequestException when expected
 	 */
 	public void test_parsePostData_error() {
-		String header = "POST /foo/bar HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
-						"\n" +
-						"one=two&three&five=six+\n" +
-						"seven";
+		String header =	"one=two&three&five=six+\n" +
+						"seven\n" +
+						"\n";
 		
 		Scanner scn = new Scanner(header);
-		scn.nextLine(); // skip the header section that would have already been scanned
-		scn.nextLine();
-		scn.nextLine();
 		
 		try 
 		{
@@ -234,8 +200,7 @@ public class SimpleRequest_test {
 	 * Test that parseHeaders() returns the expected result
 	 */
 	public void test_parseHeaders() {
-		String header = "POST /foo/bar HTTP/1.1\n" +
-						"Content-Type: text/plain\n" +
+		String header = "Content-Type: text/plain\n" +
 						"Host: localhost\n" +
 						"Foo: bar\n" +
 						" piece\n" +
@@ -244,7 +209,6 @@ public class SimpleRequest_test {
 						"seven";
 		
 		Scanner scn = new Scanner(header);
-		scn.nextLine(); // skip the first line that would have already been scanned
 		
 		try 
 		{
@@ -266,8 +230,7 @@ public class SimpleRequest_test {
 	 * Test that parseHeaders() returns the expected result
 	 */
 	public void test_parseHeaders_error() {
-		String header = "POST /foo/bar HTTP/1.1\n" +
-						"Invalid Line\n" +
+		String header = "Invalid Line\n" +
 						"Content-Type: text/plain\n" +
 						"Host: localhost\n" +
 						"Foo: bar\n" +
@@ -277,7 +240,6 @@ public class SimpleRequest_test {
 						"seven";
 		
 		Scanner scn = new Scanner(header);
-		scn.nextLine(); // skip the first line that would have already been scanned
 		
 		try 
 		{
@@ -300,27 +262,13 @@ public class SimpleRequest_test {
 	 * Test that verifyHTTPFormat() returns the expected result
 	 */
 	public void test_verifyHTTPFormat() {
-		String header = "POST /foo/bar HTTP/1.1";
+		String header = "HTTP/1.1";
 		
-		Scanner scn = new Scanner(header);
-		scn.next(); // skip the first two tokens (they would have already been scanned)
-		scn.next();
+		assertTrue(_Request.verifyHTTPFormat(header));
 		
-		assertTrue(_Request.verifyHTTPFormat(scn));
+		header = "piece";
 		
-		header = "POST /foo/bar piece HTTP/1.1";
-		scn = new Scanner(header);
-		scn.next();
-		scn.next();
-		
-		assertFalse(_Request.verifyHTTPFormat(scn));
-		
-		header = "POST /foo/bar Invalid";
-		scn = new Scanner(header);
-		scn.next();
-		scn.next();
-		
-		assertFalse(_Request.verifyHTTPFormat(scn));
+		assertFalse(_Request.verifyHTTPFormat(header));
 	}
 	
 	@Test
@@ -335,7 +283,8 @@ public class SimpleRequest_test {
 				" piece\n" +
 				"\n" +
 				"one=two&three=four&five=six+\n" +
-				"seven";
+				"seven\r\n" +
+				"\n";
 		
 		InputStream input = mock(InputStream.class);
 		
@@ -355,6 +304,140 @@ public class SimpleRequest_test {
 			assertEquals("two", _Request.getPostParameter("one"));
 			assertEquals("four", _Request.getPostParameter("three"));
 			assertEquals("six seven", _Request.getPostParameter("five"));
+		}
+		catch (Exception e)
+		{
+			fail();
+		}
+	}
+	
+	@Test
+	/**
+	 * Tests that parseInput() passes the exceptions up the call stack as expected
+	 */
+	public void test_parseInput_error() {
+		String header = "POST /foo/bar?name=foo&type=bar HTTP/1.1\n" +				
+				"Content-Type: text/plain\n" +
+				"Host: localhost\n" +
+				"Foo: bar\n" +
+				" piece\n" +
+				"\n" +
+				"one=two&three=four&five=six+\n" +
+				"seven\r\n" +
+				"\n";
+		
+		InputStream input = mock(InputStream.class);
+		
+		try 
+		{
+			doThrow(new IOException()).when(_Request).readInputStream(input);
+			try
+			{
+				_Request.runParseInput(input);
+				fail();
+			} 
+			catch(IOException e)
+			{
+				// pass
+			}
+			catch (Exception e)
+			{
+				fail();
+			}
+			
+			doReturn(header).when(_Request).readInputStream(input);
+			doThrow(new UnsupportedMethodException()).when(_Request).parseMethod("POST");
+			try
+			{
+				_Request.runParseInput(input);
+				fail();
+			} 
+			catch(UnsupportedMethodException e)
+			{
+				// pass
+			}
+			catch (Exception e)
+			{
+				fail();
+			}
+			
+			doReturn(Method.POST).when(_Request).parseMethod("POST");
+			doReturn(false).when(_Request).verifyHTTPFormat("HTTP/1.1");
+			try
+			{
+				_Request.runParseInput(input);
+				fail();
+			} 
+			catch(MalformedRequestException e)
+			{
+				// pass
+			}
+			catch (Exception e)
+			{
+				fail();
+			}
+		}
+		catch (Exception e)
+		{
+			fail();
+		}
+	}
+	
+	@Test
+	/**
+	 * Tests that readInputStream obtains reads in the data correctly
+	 */
+	public void test_readInputStream()
+	{
+		try
+		{
+			String header = "POST /foo/bar?name=foo&type=bar HTTP/1.1\r\n" +				
+							"Content-Type: text/plain\r\n" +
+							"Host: localhost\r\n" +
+							"Foo: bar\r\n" +
+							" piece\r\n" +
+							"\r\n" +
+							"one=two&three=four&five=six+\r\n" +
+							"seven\r\n" +
+							"\r\n";
+			
+			// build inputstream around the string above
+			InputStream in = new ByteArrayInputStream(header.getBytes("UTF-8"));
+			
+			// read from the inputstream
+			String result = _Request.readInputStream(in);
+			
+			// replace the \r\n by a single new line and remove and leading/trailing whitespace so
+			// that it can match the expected behaviour of readInputStream()
+			header = header.replace("\r\n", "\n").trim();
+			
+			assertEquals(header, result);
+		}
+		catch (Exception e)
+		{
+			fail();
+		}
+	}
+	
+	@Test
+	/**
+	 * Tests that readInputStream passes the IOException up the call stack as expected
+	 */
+	public void test_readInputStream_error()
+	{
+		try
+		{			
+			// build mock inputstream
+			InputStream in = mock(InputStream.class);
+			
+			// read from the inputstream
+			_Request.readInputStream(in);
+			
+			fail();
+		}
+		catch (IOException e)
+		{
+			// pass
 		}
 		catch (Exception e)
 		{

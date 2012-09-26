@@ -8,6 +8,13 @@ import server.io.IErrorLogger;
 import server.memory.ThreadManager;
 import server.processor.RequestProcessor;
 
+/**
+ * Receives ClientConnection's from the ConnectionManager and spawns a new thread for each request. The number of active
+ * threads is limited by the ThreadManager
+ * 
+ * @author dkirby
+ *
+ */
 public class Controller {
 
 	private ThreadManager _ThreadManager;
@@ -15,34 +22,64 @@ public class Controller {
 	private ConnectionManager _ConnectionManager;
 	private IErrorLogger _logger;
 	
-	public Controller(int maxRequests, ConnectionManager manager, IErrorLogger logger)
+	/**
+	 * Constructor
+	 * 
+	 * @param threadManager The thread manager to use to control when to spawn threads
+	 * @param manager the ConnectionManager to draw the ClientConnections from
+	 * @param logger the ErrorLogger to use to log error messages
+	 */
+	public Controller(ThreadManager threadManager, ConnectionManager manager, IErrorLogger logger)
 	{
-		_ThreadManager = new ThreadManager(maxRequests);
-		
+		_ThreadManager = threadManager;
 		_ConnectionManager = manager;
 		_logger = logger;
 	}
 	
-	public void exec() throws InterruptedException
+	/**
+	 * Loops indefinitely, calling Process() to process a new client request
+	 */
+	public void Execute() 
 	{	
 		while (true)
 		{	
-			ClientConnection connection = null;
-				
-			try 
-			{
-				connection = _ConnectionManager.pop();
-			} 
-			catch (NoSuchElementException | InterruptedException e) 
-			{
-				_logger.log(e.getMessage());
-				continue;
-			}
+			Process();
+		}
+	}
+	
+	/**
+	 * Processes a client request. Draws ClientConnections from the ConnectionManager, utilises the ThreadManager
+	 * to determine whether it is safe to spawn a new thread, and then spawns a new thread to process the request
+	 */
+	void Process()
+	{
+		ClientConnection connection = null;
+		
+		try 
+		{
+			connection = _ConnectionManager.pop();
 			
 			_ThreadManager.waitForFreeThread();
-			
-			RequestProcessor requestProcessor = new RequestProcessor(_ThreadManager, connection, _logger);
-			requestProcessor.start();
-		}
+		} 
+		catch (NoSuchElementException | InterruptedException e) 
+		{
+			_logger.log(e.getMessage());
+			return;
+		}			
+		
+		RequestProcessor requestProcessor = buildRequestProcessor(connection);
+		requestProcessor.start();
+	}
+	
+	/**
+	 * Generates a new RequestProcessor object for the given ClientConnection
+	 * 
+	 * @param connection the ClientConnection to be processed
+	 * 
+	 * @return a new RequestProcessor object
+	 */
+	RequestProcessor buildRequestProcessor(ClientConnection connection)
+	{
+		return new RequestProcessor(_ThreadManager, connection, _logger);
 	}
 }

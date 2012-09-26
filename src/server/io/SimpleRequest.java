@@ -9,6 +9,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.URLDecoder;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
 import server.io.RequestMethods.Method;
@@ -23,13 +24,13 @@ public class SimpleRequest implements IRequest{
 	
 	private final String ENCODING = "UTF-8";
 	
-	private InetAddress _InetAddress;
-	private Method _method;
-	private String _url;
+	private InetAddress _InetAddress;	// the client's InetAddress
+	private Method _method;	// the request method
+	private String _url;	// the requested url (with url parameters included)
 	
-	private HashMap<String, String> _urlParams;
-	private HashMap<String, String> _headers;
-	private HashMap<String, String> _postData;	
+	private HashMap<String, String> _urlParams; // the url parameters
+	private HashMap<String, String> _headers; // the request headers
+	private HashMap<String, String> _postData;	// the request post data
 	
 	/**
 	 * Constructor
@@ -62,27 +63,43 @@ public class SimpleRequest implements IRequest{
 			throw new IOException("No data");
 			
 		Scanner request = new Scanner(s);
-				
-		// Parse first line data
-		_method = parseMethod(request);
-		_url = parseUrl(request);		
 		
-		// the next token in the request should be HTTP/x.x, so make sure it is
-		if (!verifyHTTPFormat(request))
-			throw new MalformedRequestException("Malformed request");
-		
-		// Parse the URL parameters (if any)
-		_urlParams = parseUrlParams(_url);
-		
-		// Parse the remainder of the header
-		_headers = parseHeaders(request);
-		
-		// Parse the post data (if any)
-		if (_method == Method.POST)
-			_postData = parsePostData(request);
-		else
-			// set it to an empty hashmap so that the getPostData() method doesn't throw an exception
-			_postData = new HashMap<>(); 
+		try
+		{
+			// Parse first line data
+			try
+			{
+				_method = parseMethod(request.next().trim());
+				_url = request.next().trim();
+			}
+			catch (NoSuchElementException e)
+			{
+				throw new MalformedRequestException("Malformed request");
+			}
+			
+			// the next token in the request should be HTTP/x.x, so make sure it is
+			if (!verifyHTTPFormat(request.nextLine().trim()))
+				throw new MalformedRequestException("Malformed request");
+			
+			// Parse the URL parameters (if any)
+			_urlParams = parseUrlParams(_url);
+			
+			// Parse the remainder of the header
+			_headers = parseHeaders(request);
+			
+			// Parse the post data (if any)
+			if (_method == Method.POST)
+				_postData = parsePostData(request);
+			else
+				// set it to an empty hashmap so that the getPostData() method doesn't throw an exception
+				_postData = new HashMap<>();
+		}
+		finally
+		{
+			// close the scanner
+			request.close();
+		}
+			
 	}
 	
 	/**
@@ -90,10 +107,12 @@ public class SimpleRequest implements IRequest{
 	 * 
 	 * @param input the InputStream to read
 	 * @return a String containing the data read from the InputStream
-	 * @throws IOException
+	 * @throws IOException if an I/O error occurs while reading
 	 */
 	String readInputStream(InputStream input) throws IOException
 	{					
+		// Since an EOF will not be reached until the socket is closed, we read the request
+		// in line by line until a blank line is reached.		
 		BufferedReader bReader = new BufferedReader(new InputStreamReader(input));
 		
 		String result = bReader.readLine();
@@ -108,6 +127,20 @@ public class SimpleRequest implements IRequest{
 			}
 		}
 		
+		// try to read another line, in case there is a request body after the first blank line
+		if (tmp != null)
+		{
+			tmp = bReader.readLine();
+			
+			// loop until request body is read (if any)
+			while (tmp != null && !tmp.isEmpty())
+			{
+				result = result + "\n" + tmp;
+				
+				tmp = bReader.readLine();
+			}
+		}
+		
 		return result;
 	}
 	
@@ -118,29 +151,14 @@ public class SimpleRequest implements IRequest{
 	 * @return the request method
 	 * @throws UnsupportedMethodException if the request method is unsupported
 	 */
-	Method parseMethod(Scanner request) throws UnsupportedMethodException
+	Method parseMethod(String sMethod) throws UnsupportedMethodException, NoSuchElementException
 	{	
-		String s = request.next();
-		
-		RequestMethods.Method method = RequestMethods.mapMethod(s);
+		RequestMethods.Method method = RequestMethods.mapMethod(sMethod);
 		
 		if (method == Method.INVALID)
 			throw new UnsupportedMethodException("Invalid request method");
 		
 		return method;
-	}
-	
-	/**
-	 * Parse out the URL from the request
-	 * 
-	 * @param request a Scanner wraped around the string representation of the request. It is assumed that the
-	 * request method has already been parsed
-	 * 
-	 * @return the URL
-	 */
-	String parseUrl(Scanner request)
-	{
-		return request.next();		
 	}
 	
 	/**
@@ -226,6 +244,9 @@ public class SimpleRequest implements IRequest{
 	{
 		HashMap<String, String> headers = new HashMap<>();
 		
+		if (!request.hasNextLine())
+			return headers;
+		
 		String line = request.nextLine();
 		
 		while (line != null && !line.isEmpty())
@@ -233,7 +254,7 @@ public class SimpleRequest implements IRequest{
 			// Get field
 			int index = line.indexOf(":");
 			if (index == -1)
-				throw new MalformedRequestException("Malfrmed request");
+				throw new MalformedRequestException("Malformed request");
 			
 			String field = line.substring(0, index);
 			
@@ -274,11 +295,9 @@ public class SimpleRequest implements IRequest{
 	 * 
 	 * @return true if the HTTP version is properly formatted, false otherwise
 	 */
-	boolean verifyHTTPFormat(Scanner request)
-	{
-		String s = request.nextLine().trim();
-		
-		return s.matches("HTTP/[0-9]+\\.[0-9]+");
+	boolean verifyHTTPFormat(String version)
+	{		
+		return version.matches("HTTP/[0-9]+\\.[0-9]+");
 	}
 
 	@Override

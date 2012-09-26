@@ -89,18 +89,6 @@ public class ConnectionManager_test {
 		
 		// list should now be empty
 		assertTrue(_connectionManager.isEmpty());
-		
-		try 
-		{
-			// popping the list now should throw an exception
-			_connectionManager.pop();
-			
-			fail();
-		}
-		catch (NoSuchElementException e)
-		{
-			// pass
-		}
 	}
 	
 	@Test

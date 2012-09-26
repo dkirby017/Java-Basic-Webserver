@@ -15,18 +15,38 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import server.memory.ObjectCache;
 import servlet.ISimpleServlet;
 
+/**
+ * Singleton. Manages the servlets, keeping track of the request patterns for each, fetching the servlets themselves, and providing 
+ * a means for determining whether a request corresponds to a servlet
+ * 
+ * @author dkirby
+ *
+ */
 public class ServletManager {
 	
-	private class ServletFields {
-		String name;
-		String classPath;
+	/**
+	 * Protected container class for a servlet's name and class path
+	 *
+	 */
+	protected class ServletFields {
+		private String name;
+		private String classPath;
 		
 		public ServletFields(String name, String classPath) {
 			this.name = name;
 			this.classPath = classPath;
+		}
+		
+		public String getName() 
+		{
+			return name;
+		}
+		
+		public String getClassPath()
+		{
+			return classPath;
 		}
 	}
 	
@@ -35,11 +55,19 @@ public class ServletManager {
 	private final String CONFIG = System.getProperty("user.dir") + "/web.xml"; 
 	private HashMap<String, ServletFields> _servlets;
 	
+	/**
+	 * Constructor
+	 */
 	private ServletManager()
 	{		
 		_servlets = new HashMap<>();
 	}
 	
+	/**
+	 * Gets the singleton instance of the ServletManager
+	 * 
+	 * @return the singleton instance of the ServletManager
+	 */
 	static public ServletManager getInstance()
 	{
 		if (_manager == null)
@@ -48,6 +76,17 @@ public class ServletManager {
 		return _manager;
 	}
 	
+	/**
+	 * Determines whether the input url string corresponds to a servlet request
+	 * 
+	 * @param url the url string of the request
+	 * 
+	 * @return true if the request is for a servlet, false otherwise
+	 * 
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 * @throws IOException
+	 */
 	public boolean isServletRequest(String url) throws ParserConfigurationException, SAXException, IOException
 	{
 		if (_servlets.isEmpty())
@@ -56,20 +95,39 @@ public class ServletManager {
 		return _servlets.containsKey(url);
 	}
 	
-	public ISimpleServlet getServlet(String url) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException
-	{
-		if (!_servlets.containsKey(url))
-			return null;
+	/**
+	 * Gets the servlet corresponding to the input url string.
+	 * 
+	 * @param url the url of the request
+	 * 
+	 * @return the servlet requested
+	 * 
+	 * @throws ClassNotFoundException if the servlet doesn't exist
+	 * @throws InstantiationException
+	 * @throws IllegalAccessException
+	 * @throws IOException
+	 * @throws SAXException 
+	 * @throws ParserConfigurationException 
+	 */
+	public ISimpleServlet getServlet(String url) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException, ParserConfigurationException, SAXException
+	{		
+		if (!isServletRequest(url))
+			throw new ClassNotFoundException("Servlet not found");
 		
+		// get the servlet data fields
 		ServletFields sf = _servlets.get(url);
 		
-		String name = sf.name;
-		String classPath = sf.classPath;
+		// record the name and classpath
+		String name = sf.getName();
+		String classPath = sf.getClassPath();
 		
-		ObjectCache cache = ServletCache.getInstance();
+		// get the ServletCache
+		ServletCache cache = getServletCache();
 		
+		// try to get the servlet from the cache
 		ISimpleServlet servlet = (ISimpleServlet)cache.get(name);
 		
+		// if the servlet has not been cached, load it and cache it
 		if (servlet == null)
 		{
 			servlet = loadServlet(classPath);
@@ -77,9 +135,29 @@ public class ServletManager {
 			cache.cache(name, servlet);
 		}
 		
+		// return the servlet
 		return servlet;
 	}
 	
+	/**
+	 * Gets the ServletCache
+	 * 
+	 * @return the ServletCache
+	 */
+	ServletCache getServletCache()
+	{
+		return ServletCache.getInstance();
+	}
+	
+	/**
+	 * Gets the DOM object for the servlet configuration file
+	 * 
+	 * @return the DOM object for the servlet configuration file
+	 * 
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 * @throws IOException
+	 */
 	Document getDom() throws ParserConfigurationException, SAXException, IOException
 	{
 		DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -89,16 +167,30 @@ public class ServletManager {
 		return db.parse(CONFIG);
 	}
 	
+	/**
+	 * Parses the DOM object for the servlet configuration file and records the name, classpath, and request pattern for each
+	 * servlet
+	 * 
+	 * @return a HashMap mapping the servlet data fields to the url request pattern for each servlet
+	 * 
+	 * @throws ParserConfigurationException
+	 * @throws SAXException
+	 * @throws IOException
+	 */
 	HashMap<String, ServletFields> getServlets() throws ParserConfigurationException, SAXException, IOException
 	{
 		Document dom = getDom();
 		
 		HashMap<String, ServletFields> servlets = new HashMap<>();
 		
+		// get the root element
 		Element docEle = dom.getDocumentElement();
 
+		// get a list of all servlet-mapping elements
 		NodeList nl = docEle.getElementsByTagName("servlet-mapping");
 		
+		// loop through the list, extracting the request pattern and servlet name from each, and generating a ServletFields
+		// object for that servlet's data fields. Add the resulting request pattern-servletFields pair to the HashMap
 		if(nl != null && nl.getLength() > 0) 
 		{			
 			for(int i = 0; i < nl.getLength(); i++) 
@@ -114,9 +206,18 @@ public class ServletManager {
 			}
 		}
 		
+		// return the HashMap
 		return servlets;
 	}
 	
+	/**
+	 * Gets the text value for a given element and field name
+	 * 
+	 * @param el the element
+	 * @param field the field
+	 * 
+	 * @return the text value for the given element field
+	 */
 	String getTextValue(Element el, String field)
 	{
 		String textVal = null;
@@ -132,12 +233,22 @@ public class ServletManager {
 		return textVal;
 	}
 	
+	/**
+	 * Generates a ServletFields object for the given servlet name
+	 * 
+	 * @param root the root element of the servlet configuration file
+	 * @param name the servlet name
+	 * 
+	 * @return a ServletFields object containing the servlet's data fields, null if the servlet name doesn't exist in the configuration file
+	 */
 	ServletFields buildServletFields(Element root, String name)
 	{
 		ServletFields sf = null;
 		
+		// get a list of all 'servlet' elements
 		NodeList nl = root.getElementsByTagName("servlet");
 		
+		// loop through the list, searching for the given servlet name
 		if(nl != null && nl.getLength() > 0) 
 		{			
 			for(int i = 0; i < nl.getLength(); i++) 
@@ -146,19 +257,35 @@ public class ServletManager {
 			
 				String nodeName = getTextValue(el, "servlet-name");
 				
+				// if the current element is the servlet we're looking for...
 				if (nodeName.equals(name))
 				{
+					// get the servlet class path
 					String classPath = getTextValue(el, "servlet-class");
 					
+					// store the name and class path in a new ServletFields object and break out of the loop
 					sf = new ServletFields(name, classPath);					
 					break;
 				}
 			}
 		}
 		
+		// return the new ServletFields object
 		return sf;
 	}
 	
+	/**
+	 * Loads the specified servlet from the given class path
+	 * 
+	 * @param classPath the classpath of the servlet to load
+	 * 
+	 * @return the servlet object
+	 * 
+	 * @throws ClassNotFoundException if the servlet does not exist at the specified class path
+	 * @throws InstantiationException 
+	 * @throws IllegalAccessException
+	 * @throws IOException
+	 */
 	ISimpleServlet loadServlet(String classPath) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException
 	{
 		ISimpleServlet servlet = null;
