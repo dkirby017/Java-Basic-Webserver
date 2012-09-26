@@ -128,8 +128,8 @@ public class SimpleRequest implements IRequest{
 		}
 		
 		// try to read another line, in case there is a request body after the first blank line
-		if (tmp != null)
-		{
+		if (tmp != null && bReader.ready())
+		{	
 			tmp = bReader.readLine();
 			
 			// loop until request body is read (if any)
