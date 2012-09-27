@@ -12,7 +12,6 @@ import server.io.MalformedRequestException;
 import server.io.RequestMethods.Method;
 import server.io.UnsupportedMethodException;
 import server.processor.IProcessor;
-import servlet.ISimpleServlet;
 
 /**
  * Processes the servlet request and passes control off to the servlet object. Any exceptions prior to passing the control

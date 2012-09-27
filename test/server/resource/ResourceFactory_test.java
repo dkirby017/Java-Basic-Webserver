@@ -23,12 +23,12 @@ import org.junit.Test;
 public class ResourceFactory_test {
 
 	private ResourceFactory _Factory;
-	private Resource _Resource;
+	private CacheableResource _Resource;
 	private File _File;
 	
 	@Before
 	public void setUp() throws Exception {
-		_Resource = mock(Resource.class);
+		_Resource = mock(CacheableResource.class);
 		_File = mock(File.class);
 		
 		_Factory = spy(new ResourceFactory());		
@@ -48,7 +48,7 @@ public class ResourceFactory_test {
 			doReturn(_File).when(_Factory).getFile("");
 			doReturn(_Resource).when(_Factory).buildNewResource(_File);
 			
-			Resource resource = _Factory.newInstance("");
+			CacheableResource resource = _Factory.newInstance("");
 			
 			assertSame(_Resource, resource);
 		}

@@ -46,7 +46,7 @@ public class ResourceProcessor_test {
 			// setup for this test only
 			ResourceCache cache = mock(ResourceCache.class);		
 			ResourceFactory factory = mock(ResourceFactory.class);
-			Resource resource = mock(Resource.class);
+			CacheableResource resource = mock(CacheableResource.class);
 			
 			when(factory.newInstance("")).thenReturn(resource);
 			
@@ -88,7 +88,7 @@ public class ResourceProcessor_test {
 			when(response.generateHeader()).thenReturn("Header\n");
 			when(response.getOutputStream()).thenReturn(outputStream);
 			
-			Resource resource = mock(Resource.class);
+			CacheableResource resource = mock(CacheableResource.class);
 			when(resource.getBytes()).thenReturn("Resource".getBytes());
 						
 			// test

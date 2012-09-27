@@ -12,7 +12,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import servlet.ISimpleServlet;
 
 public class ServletManager_test {
 
@@ -77,7 +76,12 @@ public class ServletManager_test {
 			
 			ServletManager manager = spy(s);
 			
+			// create the servlet that should be returned
 			ISimpleServlet servlet = mock(ISimpleServlet.class);
+			
+			// wrap it in a CacheableServlet
+			CacheableServlet cServlet = mock(CacheableServlet.class);
+			when(cServlet.get_Servlet()).thenReturn(servlet);
 			
 			// add a servlet entry to the HashMap
 			HashMap<String, ServletManager.ServletFields> servlets = new HashMap<>();
@@ -96,9 +100,11 @@ public class ServletManager_test {
 			doReturn(servlets).when(manager).getServlets();
 			
 			// mock out the loadServlet method to return a known servlet
-			doReturn(servlet).when(manager).loadServlet(url);
+			doReturn(cServlet).when(manager).loadServlet(url);
 			
-			// get a servlet
+			
+			// Test
+			// get the servlet
 			ISimpleServlet servlet2 = manager.getServlet(url);
 			
 			// assert that it is the expected one
@@ -122,20 +128,11 @@ public class ServletManager_test {
 			
 			ServletManager manager = spy(s);
 			
-			ISimpleServlet servlet = mock(ISimpleServlet.class);
-			
 			// create a blank servlet HashMap
-			HashMap<String, ServletManager.ServletFields> servlets = new HashMap<>();
-			
-			// mock out the ServletCache
-			ServletCache cache = mock(ServletCache.class);
-			when(cache.get(url)).thenReturn(null);			
+			HashMap<String, ServletManager.ServletFields> servlets = new HashMap<>();	
 						
 			// mock out getServlets to return the above created hashmap
 			doReturn(servlets).when(manager).getServlets();
-			
-			// mock out the loadServlet method to return a known servlet
-			doReturn(servlet).when(manager).loadServlet(url);
 			
 			// get a servlet
 			manager.getServlet(url);

@@ -1,5 +1,8 @@
 package server.resource;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import server.memory.ObjectCache;
 
 /**
@@ -10,11 +13,20 @@ import server.memory.ObjectCache;
  */
 public class ResourceCache extends ObjectCache 
 {
+	static private final int _cleanFrequency = 20 * 60 * 1000; // frequency to clean the cache (in ms)
+	
 	static private ResourceCache _instance = null;
 	
 	private ResourceCache()
 	{
 		super();
+		new Timer().schedule(new TimerTask() {
+			
+			@Override
+			public void run() {
+				clean();
+			}
+		}, _cleanFrequency, _cleanFrequency);
 	}
 	
 	/**

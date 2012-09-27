@@ -16,7 +16,6 @@ import server.io.ClientConnection;
 import server.io.IRequest;
 import server.io.IResponse;
 import server.io.RequestMethods.Method;
-import servlet.ISimpleServlet;
 
 public class ServletProcessor_test {
 

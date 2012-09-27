@@ -31,7 +31,7 @@ public class ResourceFactory
 	 * @throws FileNotFoundException if the file does not exist
 	 * @throws IOException if an I/O error occurs
 	 */
-	public Resource newInstance(String url) throws FileNotFoundException, IOException
+	public CacheableResource newInstance(String url) throws FileNotFoundException, IOException
 	{
 		File filePath = getFile(url);
 												
@@ -65,7 +65,7 @@ public class ResourceFactory
 	 * 
 	 * @throws IOException if an I/O error occurs while reading the file
 	 */
-	Resource buildNewResource(File filePath) throws IOException
+	CacheableResource buildNewResource(File filePath) throws IOException
 	{
 		BufferedInputStream input = new BufferedInputStream(new FileInputStream(filePath));
 		
@@ -77,7 +77,7 @@ public class ResourceFactory
 			
 			input.read(bytes);
 			
-			Resource resource = new Resource(bytes);
+			CacheableResource resource = new CacheableResource(bytes);
 			
 			return resource;
 		}

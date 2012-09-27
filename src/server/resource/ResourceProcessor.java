@@ -41,7 +41,7 @@ public class ResourceProcessor implements IProcessor {
 		ResourceCache cache = getResourceCache();
 		
 		// attempt to get the resource from the cache
-		Resource resource = (Resource) cache.get(url);
+		CacheableResource resource = (CacheableResource) cache.get(url);
 		
 		// if it hasn't been cached, create the resource and cache it
 		if (resource == null)
@@ -103,7 +103,7 @@ public class ResourceProcessor implements IProcessor {
 	 * 
 	 * @throws IOException if an I/O error occurs
 	 */
-	void outputResource(IResponse response, Resource resource, String extension) throws IOException 
+	void outputResource(IResponse response, CacheableResource resource, String extension) throws IOException 
 	{
 		// set the status code
 		response.setStatusCode(StatusCode.OK.getValue());

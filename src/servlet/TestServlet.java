@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import server.io.HTTPStatusCodes;
 import server.io.IRequest;
 import server.io.IResponse;
+import server.servlet.ISimpleServlet;
 
 /**
  * A basic servlet class for testing

@@ -15,7 +15,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import servlet.ISimpleServlet;
 
 /**
  * Singleton. Manages the servlets, keeping track of the request patterns for each, fetching the servlets themselves, and providing 
@@ -124,19 +123,19 @@ public class ServletManager {
 		// get the ServletCache
 		ServletCache cache = getServletCache();
 		
-		// try to get the servlet from the cache
-		ISimpleServlet servlet = (ISimpleServlet)cache.get(name);
+		// try to get the CacheableServlet from the cache
+		CacheableServlet cServlet = (CacheableServlet)cache.get(name);
 		
-		// if the servlet has not been cached, load it and cache it
-		if (servlet == null)
+		// if the CacheableServlet has not been cached, load it and cache it
+		if (cServlet == null)
 		{
-			servlet = loadServlet(classPath);
+			cServlet = loadServlet(classPath);
 			
-			cache.cache(name, servlet);
+			cache.cache(name, cServlet);
 		}
 		
 		// return the servlet
-		return servlet;
+		return cServlet.get_Servlet();
 	}
 	
 	/**
@@ -275,18 +274,18 @@ public class ServletManager {
 	}
 	
 	/**
-	 * Loads the specified servlet from the given class path
+	 * Loads the specified CacheableServlet from the given class path
 	 * 
-	 * @param classPath the classpath of the servlet to load
+	 * @param classPath the classPath of the servlet to load
 	 * 
-	 * @return the servlet object
+	 * @return the CacheableServlet object
 	 * 
 	 * @throws ClassNotFoundException if the servlet does not exist at the specified class path
 	 * @throws InstantiationException 
 	 * @throws IllegalAccessException
 	 * @throws IOException
 	 */
-	ISimpleServlet loadServlet(String classPath) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException
+	CacheableServlet loadServlet(String classPath) throws ClassNotFoundException, InstantiationException, IllegalAccessException, IOException
 	{
 		ISimpleServlet servlet = null;
 			
@@ -304,7 +303,7 @@ public class ServletManager {
 			
 			servlet = (ISimpleServlet)myClass.newInstance();
 			
-			return servlet;
+			return new CacheableServlet(servlet);
 		}
 		finally
 		{
