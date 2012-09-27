@@ -21,6 +21,12 @@ import server.io.IRequest;
 import server.memory.ThreadManager;
 import server.servlet.ServletManager;
 
+/**
+ * Test the RequestProcessor class
+ * 
+ * @author dkirby
+ *
+ */
 public class RequestProcessor_test {
 
 	private RequestProcessor _Processor;

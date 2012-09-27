@@ -6,6 +6,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test the ObjectCache class
+ * 
+ * @author dkirby
+ *
+ */
 public class ObjectCache_test {
 	
 	private ObjectCache _Cache;

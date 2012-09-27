@@ -34,13 +34,11 @@ public class ResourceProcessor implements IProcessor {
 		}
 		
 		// get the file extension
-		String extension = "";
-		int index = url.lastIndexOf(".");
-		if (index != -1)
-			extension = url.substring(index);		
+		String extension = getExtension(url);
+				
 		
 		// get the ResourceCache
-		ResourceCache cache = ResourceCache.getInstance();
+		ResourceCache cache = getResourceCache();
 		
 		// attempt to get the resource from the cache
 		Resource resource = (Resource) cache.get(url);
@@ -48,7 +46,7 @@ public class ResourceProcessor implements IProcessor {
 		// if it hasn't been cached, create the resource and cache it
 		if (resource == null)
 		{
-			ResourceFactory factory = new ResourceFactory();
+			ResourceFactory factory = getResourceFactory();
 					
 			resource = factory.newInstance(url);
 			
@@ -57,6 +55,43 @@ public class ResourceProcessor implements IProcessor {
 		
 		// output the resource to the client
 		outputResource(connection.getResponse(), resource, extension);			
+	}
+	
+	/**
+	 * Extracts the file extension from the url
+	 * 
+	 * @param url the url of the request
+	 * 
+	 * @return the file extension from the url, or an empty string if no extension is present
+	 */
+	String getExtension(String url)
+	{
+		int index = url.lastIndexOf(".");
+		
+		if (index != -1)
+			return url.substring(index);
+		else
+			return "";
+	}
+	
+	/**
+	 * Gets a new resource factory
+	 * 
+	 * @return a new ResourceFactory object
+	 */
+	ResourceFactory getResourceFactory()
+	{
+		return new ResourceFactory();
+	}
+	
+	/**
+	 * Gets the resource cache
+	 * 
+	 * @return the resource cache
+	 */
+	ResourceCache getResourceCache()
+	{
+		return ResourceCache.getInstance();
 	}
 
 	/**

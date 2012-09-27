@@ -16,6 +16,12 @@ import server.io.IErrorLogger;
 import server.memory.ThreadManager;
 import server.processor.RequestProcessor;
 
+/**
+ * Test the Controller class
+ * 
+ * @author dkirby
+ *
+ */
 public class Controller_test {
 
 	private Controller _Controller;	

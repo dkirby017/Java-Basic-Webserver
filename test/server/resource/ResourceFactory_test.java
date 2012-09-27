@@ -14,6 +14,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test the ResourceFactory class
+ * 
+ * @author dkirby
+ *
+ */
 public class ResourceFactory_test {
 
 	private ResourceFactory _Factory;

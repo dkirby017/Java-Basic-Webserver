@@ -8,6 +8,12 @@ import java.net.Socket;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test the SimpleResponse class
+ * 
+ * @author dkirby
+ *
+ */
 public class SimpleResponse_test {
 
 	private SimpleResponse _Response;

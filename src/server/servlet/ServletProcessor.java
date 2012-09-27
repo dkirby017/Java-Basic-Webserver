@@ -36,7 +36,7 @@ public class ServletProcessor implements IProcessor {
 			url = url.substring(0, index);
 		
 		// get the servlet manager
-		ServletManager manager = ServletManager.getInstance();
+		ServletManager manager = getServletManager();
 		
 		// get the servlet
 		ISimpleServlet servlet = manager.getServlet(url);
@@ -52,6 +52,16 @@ public class ServletProcessor implements IProcessor {
 		else if (method == Method.POST)
 			servlet.doPost(request, connection.getResponse());
 		
+	}
+	
+	/**
+	 * Gets the Servlet Manager
+	 * 
+	 * @return the Servlet Manager
+	 */
+	ServletManager getServletManager()
+	{
+		return ServletManager.getInstance();
 	}
 
 }

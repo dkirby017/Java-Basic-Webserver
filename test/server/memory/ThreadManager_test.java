@@ -6,6 +6,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test the ThreadManager class
+ * 
+ * @author dkirby
+ *
+ */
 public class ThreadManager_test {
 
 	private ThreadManager _Manager;

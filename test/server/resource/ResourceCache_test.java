@@ -6,6 +6,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+/**
+ * Test the ResourceCache class
+ * 
+ * @author dkirby
+ *
+ */
 public class ResourceCache_test {
 
 	private ResourceCache _cache;
@@ -20,6 +26,9 @@ public class ResourceCache_test {
 	}
 
 	@Test
+	/**
+	 * Test that the ResourceCache correctly implements a singleton
+	 */
 	public void test_getInstance() {
 		ResourceCache cache2 = ResourceCache.getInstance();
 		
